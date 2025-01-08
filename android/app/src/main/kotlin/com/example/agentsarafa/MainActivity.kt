@@ -1,4 +1,4 @@
-package com.example.agentsarafa
+package com.example.budget
 
 import io.flutter.embedding.android.FlutterActivity
 

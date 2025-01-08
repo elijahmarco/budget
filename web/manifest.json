@@ -1,6 +1,6 @@
 {
-    "name": "agentsarafa",
-    "short_name": "agentsarafa",
+    "name": "budget",
+    "short_name": "budget",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
