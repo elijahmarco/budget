@@ -67,6 +67,7 @@ class _HomePageState extends State<HomePage> {
       loading = false;
       budgets = allBudgets;
     });
+    recalculateTotals();
   }
 
   getTransactions() async {
@@ -106,7 +107,7 @@ class _HomePageState extends State<HomePage> {
     await supabase.from('transactions').insert({
       'budget_id': budget_id,
       'kind': kind,
-      'amount': amount,
+      'amount': int.parse(amount), // Ensure amount is sent as an integer
       'category': category,
       'desc': desc
     });
@@ -114,24 +115,42 @@ class _HomePageState extends State<HomePage> {
       print(item);
       if (item['id'].toString() == budget_id) {
         if (kind == 'Add') {
-          var newtotal = (item['amount'] as int) + double.parse(amount);
+          var newtotal = (item['amount'] as int) + int.parse(amount);
           await supabase
               .from('budgets')
               .update({'amount': newtotal.toString()}).eq('id', budget_id);
         } else {
-          var newtotal = item['spent'] + double.parse(amount);
+          var newtotal = item['spent'] + int.parse(amount);
           await supabase
               .from('budgets')
               .update({'spent': newtotal.toString()}).eq('id', budget_id);
         }
       }
     }
-    // await budgets!.map((item) async {
-    //   print(item);
-
-    // });
     await getBudgets();
     await getTransactions();
+  }
+
+  deleteBudget(String id) async {
+    await supabase.from('transactions').delete().eq('budget_id', id);
+    await supabase.from('budgets').delete().eq('id', id);
+    await getBudgets();
+    await getTransactions();
+  }
+
+  recalculateTotals() {
+    if (budgets != null) {
+      num totalIncome = 0;
+      num totalSpent = 0;
+      for (var budget in budgets!) {
+        totalIncome += budget['amount'];
+        totalSpent += budget['spent'];
+      }
+      setState(() {
+        income = totalIncome as int;
+        spent = totalSpent as int;
+      });
+    }
   }
 
   @override
@@ -487,50 +506,67 @@ class _HomePageState extends State<HomePage> {
                     itemCount: budgets!.length,
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: ListTile(
-                          leading: CircularProgressIndicator(
-                            value: (budgets![index]['spent']) /
-                                budgets![index]['amount'],
-                            semanticsLabel: ((budgets![index]['spent'] == 0
-                                        ? 1
-                                        : budgets![index]['spent']) /
-                                    budgets![index]['amount'])
-                                .toString(),
-                            backgroundColor: Colors.grey.shade200,
-                            semanticsValue: ((budgets![index]['spent'] == 0
-                                        ? 1
-                                        : budgets![index]['spent']) /
-                                    budgets![index]['amount'])
-                                .toString(),
-                            color: Colors.blueGrey,
+                      return Dismissible(
+                        key: Key(budgets![index]['id'].toString()),
+                        direction: DismissDirection.endToStart,
+                        onDismissed: (direction) async {
+                          await deleteBudget(budgets![index]['id'].toString());
+                        },
+                        background: Container(
+                          color: Colors.red,
+                          alignment: Alignment.centerRight,
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Icon(
+                            Icons.delete,
+                            color: Colors.white,
                           ),
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                budgets![index]['label'],
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              LinearProgressIndicator(
-                                value: (budgets![index]['spent'] == 0
-                                        ? 1
-                                        : budgets![index]['spent']) /
-                                    budgets![index]['amount'],
-                                backgroundColor: Colors.grey.shade400,
-                                color: Colors.blueGrey,
-                              )
-                            ],
-                          ),
-                          trailing: Text(
-                            '${budgets![index]['amount']} USD',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        child: Container(
+                          margin: EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            leading: CircularProgressIndicator(
+                              value: (budgets![index]['spent']) /
+                                  budgets![index]['amount'],
+                              semanticsLabel: ((budgets![index]['spent'] == 0
+                                          ? 1
+                                          : budgets![index]['spent']) /
+                                      budgets![index]['amount'])
+                                  .toString(),
+                              backgroundColor: Colors.grey.shade200,
+                              semanticsValue: ((budgets![index]['spent'] == 0
+                                          ? 1
+                                          : budgets![index]['spent']) /
+                                      budgets![index]['amount'])
+                                  .toString(),
+                              color: Colors.blueGrey,
+                            ),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  budgets![index]['label'],
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                LinearProgressIndicator(
+                                  value: (budgets![index]['spent'] == 0
+                                          ? 1
+                                          : budgets![index]['spent']) /
+                                      budgets![index]['amount'],
+                                  backgroundColor: Colors.grey.shade400,
+                                  color: Colors.blueGrey,
+                                )
+                              ],
+                            ),
+                            trailing: Text(
+                              '${budgets![index]['amount']} USD',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
                           ),
                         ),
                       );
