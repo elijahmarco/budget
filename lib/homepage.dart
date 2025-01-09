@@ -1,5 +1,6 @@
 import 'package:budget/configs/constants.dart';
 import 'package:flutter/material.dart';
+import 'main.dart'; // Import the main.dart file to access the themeNotifier
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -138,21 +139,20 @@ class _HomePageState extends State<HomePage> {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.amber,
         title: Text('Budget Tracker'),
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
+            DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.amber,
+                color: Theme.of(context).colorScheme.primary,
               ),
               child: Text(
                 'Menu',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 24,
                 ),
               ),
@@ -168,7 +168,10 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                // Handle Settings tap
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                );
               },
             ),
           ],
@@ -225,7 +228,8 @@ class _HomePageState extends State<HomePage> {
                                   padding: EdgeInsets.all(8),
                                   margin: EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
+                                      color:
+                                          Theme.of(context).colorScheme.surface,
                                       borderRadius: BorderRadius.circular(10)),
                                   child: TextField(
                                     controller: amount,
@@ -239,7 +243,8 @@ class _HomePageState extends State<HomePage> {
                                   padding: EdgeInsets.all(8),
                                   margin: EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
+                                      color:
+                                          Theme.of(context).colorScheme.surface,
                                       borderRadius: BorderRadius.circular(10)),
                                   child: TextField(
                                     controller: category,
@@ -253,7 +258,8 @@ class _HomePageState extends State<HomePage> {
                                   height: 60,
                                   margin: EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
+                                      color:
+                                          Theme.of(context).colorScheme.surface,
                                       borderRadius: BorderRadius.circular(10)),
                                   child: TextField(
                                     controller: desc,
@@ -285,13 +291,18 @@ class _HomePageState extends State<HomePage> {
                                   child: Container(
                                     width: size.width * 0.8,
                                     height: 50,
-                                    decoration:
-                                        BoxDecoration(color: Colors.amber),
+                                    decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                                     child: Center(
                                       child: Text(
                                         'Confirm',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary),
                                       ),
                                     ),
                                   ),
@@ -307,10 +318,9 @@ class _HomePageState extends State<HomePage> {
               });
         },
         child: Icon(Icons.add_circle),
-        backgroundColor: Colors.amber,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,7 +346,7 @@ class _HomePageState extends State<HomePage> {
                   width: size.width * 0.47,
                   height: 70,
                   decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20)),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -356,7 +366,7 @@ class _HomePageState extends State<HomePage> {
                   width: size.width * 0.47,
                   height: 70,
                   decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20)),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -404,7 +414,9 @@ class _HomePageState extends State<HomePage> {
                                         margin:
                                             EdgeInsets.symmetric(vertical: 8),
                                         decoration: BoxDecoration(
-                                            color: Colors.grey.shade200,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface,
                                             borderRadius:
                                                 BorderRadius.circular(10)),
                                         child: TextField(
@@ -419,7 +431,9 @@ class _HomePageState extends State<HomePage> {
                                         margin:
                                             EdgeInsets.symmetric(vertical: 8),
                                         decoration: BoxDecoration(
-                                            color: Colors.grey.shade200,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface,
                                             borderRadius:
                                                 BorderRadius.circular(10)),
                                         child: TextField(
@@ -443,12 +457,17 @@ class _HomePageState extends State<HomePage> {
                                           width: size.width * 0.8,
                                           height: 50,
                                           decoration: BoxDecoration(
-                                              color: Colors.amber),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary),
                                           child: Center(
                                             child: Text(
                                               'Confirm',
                                               style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimary),
                                             ),
                                           ),
                                         ),
@@ -471,7 +490,7 @@ class _HomePageState extends State<HomePage> {
                       return Container(
                         margin: EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(12)),
                         child: ListTile(
                           leading: CircularProgressIndicator(
@@ -488,7 +507,7 @@ class _HomePageState extends State<HomePage> {
                                         : budgets![index]['spent']) /
                                     budgets![index]['amount'])
                                 .toString(),
-                            color: Colors.amber,
+                            color: Colors.blueGrey,
                           ),
                           title: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,11 +523,10 @@ class _HomePageState extends State<HomePage> {
                                         : budgets![index]['spent']) /
                                     budgets![index]['amount'],
                                 backgroundColor: Colors.grey.shade400,
-                                color: Colors.amber,
+                                color: Colors.blueGrey,
                               )
                             ],
                           ),
-                          // subtitle: Text(dummyBudget[index]['createdAt'], style: TextStyle(fontSize: 12, color: Colors.grey),),
                           trailing: Text(
                             '${budgets![index]['amount']} USD',
                             style: TextStyle(
@@ -522,7 +540,7 @@ class _HomePageState extends State<HomePage> {
                     height: 120,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: Colors.amber,
+                        color: Colors.blueGrey,
                       ),
                     ),
                   ),
@@ -541,7 +559,7 @@ class _HomePageState extends State<HomePage> {
                       return Container(
                         margin: EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(12)),
                         child: ListTile(
                           dense: true,
@@ -571,11 +589,39 @@ class _HomePageState extends State<HomePage> {
                     height: 120,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: Colors.amber,
+                        color: Colors.blueGrey,
                       ),
                     ),
                   ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsPage extends StatefulWidget {
+  @override
+  _SettingsPageState createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Settings'),
+      ),
+      body: ListTile(
+        leading: Icon(Icons.brightness_6),
+        title: Text('Dark Mode'),
+        trailing: Switch(
+          value: themeNotifier.value == ThemeMode.dark,
+          onChanged: (value) {
+            setState(() {
+              themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
+            });
+          },
         ),
       ),
     );
