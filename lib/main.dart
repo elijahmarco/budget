@@ -39,11 +39,11 @@ class MyApp extends StatelessWidget {
               onSurface: Colors.black,
             ),
             useMaterial3: true,
-            appBarTheme: AppBarTheme(
+            appBarTheme: const AppBarTheme(
               backgroundColor: Colors.blueGrey,
               foregroundColor: Colors.white,
             ),
-            floatingActionButtonTheme: FloatingActionButtonThemeData(
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
               backgroundColor: Colors.blueGrey,
             ),
           ),
@@ -62,11 +62,11 @@ class MyApp extends StatelessWidget {
               onSurface: Colors.white,
             ),
             useMaterial3: true,
-            appBarTheme: AppBarTheme(
+            appBarTheme: const AppBarTheme(
               backgroundColor: Colors.blueGrey,
               foregroundColor: Colors.white,
             ),
-            floatingActionButtonTheme: FloatingActionButtonThemeData(
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
               backgroundColor: Colors.blueGrey,
             ),
           ),

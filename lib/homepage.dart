@@ -1,6 +1,7 @@
 import 'package:budget/configs/constants.dart';
 import 'package:flutter/material.dart';
 import 'main.dart'; // Import the main.dart file to access the themeNotifier
+import 'transactions_page.dart'; // Import the transactions page
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -103,9 +104,9 @@ class _HomePageState extends State<HomePage> {
     await getBudgets();
   }
 
-  addTransaction(budget_id, kind, amount, category, desc) async {
+  addTransaction(budgetId, kind, amount, category, desc) async {
     await supabase.from('transactions').insert({
-      'budget_id': budget_id,
+      'budget_id': budgetId,
       'kind': kind,
       'amount': int.parse(amount), // Ensure amount is sent as an integer
       'category': category,
@@ -113,17 +114,17 @@ class _HomePageState extends State<HomePage> {
     });
     for (var item in budgets!) {
       print(item);
-      if (item['id'].toString() == budget_id) {
+      if (item['id'].toString() == budgetId) {
         if (kind == 'Add') {
           var newtotal = (item['amount'] as int) + int.parse(amount);
           await supabase
               .from('budgets')
-              .update({'amount': newtotal.toString()}).eq('id', budget_id);
+              .update({'amount': newtotal.toString()}).eq('id', budgetId);
         } else {
           var newtotal = item['spent'] + int.parse(amount);
           await supabase
               .from('budgets')
-              .update({'spent': newtotal.toString()}).eq('id', budget_id);
+              .update({'spent': newtotal.toString()}).eq('id', budgetId);
         }
       }
     }
@@ -158,7 +159,7 @@ class _HomePageState extends State<HomePage> {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Budget Tracker'),
+        title: const Text('Budget Tracker'),
       ),
       drawer: Drawer(
         child: ListView(
@@ -202,8 +203,8 @@ class _HomePageState extends State<HomePage> {
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: Text('Add Transactions'),
-                  content: Container(
+                  title: const Text('Add Transactions'),
+                  content: SizedBox(
                     width: size.width * 0.85,
                     height: size.height * 0.8,
                     child: budgets != null
@@ -220,7 +221,7 @@ class _HomePageState extends State<HomePage> {
                                       child: Text(value),
                                     );
                                   }).toList(),
-                                  hint: Text('Select Kind'),
+                                  hint: const Text('Select Kind'),
                                   value: kind,
                                   onChanged: (value) {
                                     setState(() {
@@ -236,7 +237,7 @@ class _HomePageState extends State<HomePage> {
                                     );
                                   }).toList(),
                                   value: budget_id,
-                                  hint: Text('Select Budget'),
+                                  hint: const Text('Select Budget'),
                                   onChanged: (value) {
                                     setState(() {
                                       budget_id = value.toString();
@@ -244,8 +245,9 @@ class _HomePageState extends State<HomePage> {
                                   },
                                 ),
                                 Container(
-                                  padding: EdgeInsets.all(8),
-                                  margin: EdgeInsets.symmetric(vertical: 8),
+                                  padding: const EdgeInsets.all(8),
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
                                       color:
                                           Theme.of(context).colorScheme.surface,
@@ -253,36 +255,38 @@ class _HomePageState extends State<HomePage> {
                                   child: TextField(
                                     controller: amount,
                                     keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                         hintText: 'Amount',
                                         border: InputBorder.none),
                                   ),
                                 ),
                                 Container(
-                                  padding: EdgeInsets.all(8),
-                                  margin: EdgeInsets.symmetric(vertical: 8),
+                                  padding: const EdgeInsets.all(8),
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
                                       color:
                                           Theme.of(context).colorScheme.surface,
                                       borderRadius: BorderRadius.circular(10)),
                                   child: TextField(
                                     controller: category,
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                         hintText: 'Category',
                                         border: InputBorder.none),
                                   ),
                                 ),
                                 Container(
-                                  padding: EdgeInsets.all(8),
+                                  padding: const EdgeInsets.all(8),
                                   height: 60,
-                                  margin: EdgeInsets.symmetric(vertical: 8),
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
                                       color:
                                           Theme.of(context).colorScheme.surface,
                                       borderRadius: BorderRadius.circular(10)),
                                   child: TextField(
                                     controller: desc,
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                       hintText: 'TX Description',
                                       border: InputBorder.none,
                                     ),
@@ -329,33 +333,33 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           )
-                        : Center(
+                        : const Center(
                             child: Text('Please create a budget first'),
                           ),
                   ),
                 );
               });
         },
-        child: Icon(Icons.add_circle),
+        child: const Icon(Icons.add_circle),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0, top: 8.0),
+            const Padding(
+              padding: EdgeInsets.only(left: 8.0, top: 8.0),
               child: Text('Welcome'),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(
                 'Your Budget Tracker',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             Row(
@@ -370,10 +374,10 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Total Income'),
+                      const Text('Total Income'),
                       Text(
                         'USD $income',
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
                             fontSize: 20),
@@ -390,10 +394,10 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Total Spent'),
+                      const Text('Total Spent'),
                       Text(
                         'USD $spent',
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: Colors.red,
                             fontWeight: FontWeight.bold,
                             fontSize: 20),
@@ -408,7 +412,7 @@ class _HomePageState extends State<HomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'My Budgets',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
@@ -418,20 +422,20 @@ class _HomePageState extends State<HomePage> {
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
-                                title: Text(
+                                title: const Text(
                                   'Add New Budget',
                                   style: TextStyle(fontSize: 12),
                                 ),
                                 content: Container(
                                   height: size.height * 0.6,
                                   width: size.width * 0.85,
-                                  padding: EdgeInsets.all(8),
+                                  padding: const EdgeInsets.all(8),
                                   child: Column(
                                     children: [
                                       Container(
-                                        padding: EdgeInsets.all(8),
-                                        margin:
-                                            EdgeInsets.symmetric(vertical: 8),
+                                        padding: const EdgeInsets.all(8),
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 8),
                                         decoration: BoxDecoration(
                                             color: Theme.of(context)
                                                 .colorScheme
@@ -440,15 +444,15 @@ class _HomePageState extends State<HomePage> {
                                                 BorderRadius.circular(10)),
                                         child: TextField(
                                           controller: budgetName,
-                                          decoration: InputDecoration(
+                                          decoration: const InputDecoration(
                                               hintText: 'Budget Name',
                                               border: InputBorder.none),
                                         ),
                                       ),
                                       Container(
-                                        padding: EdgeInsets.all(8),
-                                        margin:
-                                            EdgeInsets.symmetric(vertical: 8),
+                                        padding: const EdgeInsets.all(8),
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 8),
                                         decoration: BoxDecoration(
                                             color: Theme.of(context)
                                                 .colorScheme
@@ -458,7 +462,7 @@ class _HomePageState extends State<HomePage> {
                                         child: TextField(
                                           controller: budgetAmount,
                                           keyboardType: TextInputType.number,
-                                          decoration: InputDecoration(
+                                          decoration: const InputDecoration(
                                               hintText: 'Amount',
                                               border: InputBorder.none),
                                         ),
@@ -497,7 +501,7 @@ class _HomePageState extends State<HomePage> {
                               );
                             });
                       },
-                      icon: Icon(Icons.add_circle))
+                      icon: const Icon(Icons.add_circle))
                 ],
               ),
             ),
@@ -515,57 +519,70 @@ class _HomePageState extends State<HomePage> {
                         background: Container(
                           color: Colors.red,
                           alignment: Alignment.centerRight,
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Icon(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const Icon(
                             Icons.delete,
                             color: Colors.white,
                           ),
                         ),
-                        child: Container(
-                          margin: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(12)),
-                          child: ListTile(
-                            leading: CircularProgressIndicator(
-                              value: (budgets![index]['spent']) /
-                                  budgets![index]['amount'],
-                              semanticsLabel: ((budgets![index]['spent'] == 0
-                                          ? 1
-                                          : budgets![index]['spent']) /
-                                      budgets![index]['amount'])
-                                  .toString(),
-                              backgroundColor: Colors.grey.shade200,
-                              semanticsValue: ((budgets![index]['spent'] == 0
-                                          ? 1
-                                          : budgets![index]['spent']) /
-                                      budgets![index]['amount'])
-                                  .toString(),
-                              color: Colors.blueGrey,
-                            ),
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  budgets![index]['label'],
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TransactionsPage(
+                                  budgetId: budgets![index]['id'].toString(),
+                                  budgetLabel: budgets![index]['label'],
                                 ),
-                                LinearProgressIndicator(
-                                  value: (budgets![index]['spent'] == 0
-                                          ? 1
-                                          : budgets![index]['spent']) /
-                                      budgets![index]['amount'],
-                                  backgroundColor: Colors.grey.shade400,
-                                  color: Colors.blueGrey,
-                                )
-                              ],
-                            ),
-                            trailing: Text(
-                              '${budgets![index]['amount']} USD',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              leading: CircularProgressIndicator(
+                                value: (budgets![index]['spent']) /
+                                    budgets![index]['amount'],
+                                semanticsLabel: ((budgets![index]['spent'] == 0
+                                            ? 1
+                                            : budgets![index]['spent']) /
+                                        budgets![index]['amount'])
+                                    .toString(),
+                                backgroundColor: Colors.grey.shade200,
+                                semanticsValue: ((budgets![index]['spent'] == 0
+                                            ? 1
+                                            : budgets![index]['spent']) /
+                                        budgets![index]['amount'])
+                                    .toString(),
+                                color: Colors.blueGrey,
+                              ),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    budgets![index]['label'],
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  LinearProgressIndicator(
+                                    value: (budgets![index]['spent'] == 0
+                                            ? 1
+                                            : budgets![index]['spent']) /
+                                        budgets![index]['amount'],
+                                    backgroundColor: Colors.grey.shade400,
+                                    color: Colors.blueGrey,
+                                  )
+                                ],
+                              ),
+                              trailing: Text(
+                                '${budgets![index]['amount']} USD',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
                             ),
                           ),
                         ),
@@ -574,56 +591,7 @@ class _HomePageState extends State<HomePage> {
                 : SizedBox(
                     width: size.width,
                     height: 120,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                  ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Transactions',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-            transactions != null
-                ? ListView.builder(
-                    itemCount: transactions!.length,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: ListTile(
-                          dense: true,
-                          title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(transactions![index]['category']),
-                              ]),
-                          subtitle: Text(
-                            transactions![index]['desc'],
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          trailing: Text(
-                            transactions![index]['amount'].toString() + ' USD',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: transactions![index]['kind'] == 'Add'
-                                    ? Colors.green
-                                    : Colors.red),
-                          ),
-                        ),
-                      );
-                    })
-                : SizedBox(
-                    width: size.width,
-                    height: 120,
-                    child: Center(
+                    child: const Center(
                       child: CircularProgressIndicator(
                         color: Colors.blueGrey,
                       ),
@@ -637,6 +605,8 @@ class _HomePageState extends State<HomePage> {
 }
 
 class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
@@ -646,11 +616,11 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: const Text('Settings'),
       ),
       body: ListTile(
-        leading: Icon(Icons.brightness_6),
-        title: Text('Dark Mode'),
+        leading: const Icon(Icons.brightness_6),
+        title: const Text('Dark Mode'),
         trailing: Switch(
           value: themeNotifier.value == ThemeMode.dark,
           onChanged: (value) {
