@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'main.dart'; // Import the main.dart file to access the themeNotifier
 import 'transactions_page.dart'; // Import the transactions page
 import 'package:intl/intl.dart'; // Add this import for date formatting
+import 'about_page.dart'; // Import the about page
+import 'monthly_summary_page.dart'; // Import the monthly summary page
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,8 +17,11 @@ class _HomePageState extends State<HomePage> {
   List? budgets;
   int? spent = 0;
   int? income = 0;
+  int? wallet = 0;
   bool? loading;
   List? transactions;
+  Map<String, int> monthlyIncome = {};
+  Map<String, int> monthlyExpenditure = {};
 
   TextEditingController budgetName = TextEditingController();
   TextEditingController budgetAmount = TextEditingController();
@@ -65,16 +70,26 @@ class _HomePageState extends State<HomePage> {
       if (transactions?.length != 0) {
         num totalin = 0;
         num totalout = 0;
+        Map<String, int> incomeMap = {};
+        Map<String, int> expenditureMap = {};
         for (var element in transactions!) {
+          String month =
+              DateFormat.yMMMM().format(DateTime.parse(element['created_at']));
           if (element['kind'] == 'Add') {
             totalin = totalin + element['amount'];
+            incomeMap[month] =
+                (incomeMap[month] ?? 0) + (element['amount'] as int);
           } else {
             totalout = totalout + element['amount'];
+            expenditureMap[month] =
+                (expenditureMap[month] ?? 0) + (element['amount'] as int);
           }
         }
         setState(() {
           income = totalin as int;
           spent = totalout as int;
+          monthlyIncome = incomeMap;
+          monthlyExpenditure = expenditureMap;
         });
       }
     } catch (e) {
@@ -137,9 +152,37 @@ class _HomePageState extends State<HomePage> {
       await supabase.from('budgets').delete().eq('id', id);
       await getBudgets();
       await getTransactions();
+      recalculateTotals();
     } catch (e) {
       // Handle error
       print('Error deleting budget: $e');
+    }
+  }
+
+  deleteTransaction(String id, String budgetId, int amount, String kind) async {
+    try {
+      await supabase.from('transactions').delete().eq('id', id);
+      for (var item in budgets!) {
+        if (item['id'].toString() == budgetId) {
+          if (kind == 'Add') {
+            var newtotal = (item['amount'] as int) - amount;
+            await supabase
+                .from('budgets')
+                .update({'amount': newtotal}).eq('id', budgetId);
+          } else {
+            var newtotal = item['spent'] - amount;
+            await supabase
+                .from('budgets')
+                .update({'spent': newtotal}).eq('id', budgetId);
+          }
+        }
+      }
+      await getBudgets();
+      await getTransactions();
+      recalculateTotals(); // Ensure this line is called
+    } catch (e) {
+      // Handle error
+      print('Error deleting transaction: $e');
     }
   }
 
@@ -154,6 +197,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         income = totalIncome as int;
         spent = totalSpent as int;
+        wallet = income! - spent!;
       });
     }
   }
@@ -177,7 +221,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Budget Tracker'),
+        title: const Text('Wally'),
       ),
       drawer: Drawer(
         child: ListView(
@@ -199,7 +243,10 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.info),
               title: const Text('About'),
               onTap: () {
-                // Handle About tap
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutPage()),
+                );
               },
             ),
             ListTile(
@@ -208,7 +255,20 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SettingsPage()),
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_today),
+              title: const Text('Monthly Summary'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MonthlySummaryPage(
+                          monthlyIncome: monthlyIncome,
+                          monthlyExpenditure: monthlyExpenditure)),
                 );
               },
             ),
@@ -239,48 +299,46 @@ class _HomePageState extends State<HomePage> {
       body: loading == true
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8.0, top: 8.0),
-                    child: Text('Welcome'),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      'Your Budget Tracker',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Center(
+                      child: Text(
+                        'Track Your Expenses',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 22),
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      InfoCard(
-                        title: 'Total Income',
-                        amount: 'USD $income',
-                        color: Colors.green,
-                      ),
-                      InfoCard(
-                        title: 'Total Spent',
-                        amount: 'USD $spent',
-                        color: Colors.red,
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Flexible(
+                          child: InfoCard(
+                            title: 'Wallet',
+                            amount: 'USD $wallet',
+                            color: Colors.blue,
+                          ),
+                        ),
+                        Flexible(
+                          child: InfoCard(
+                            title: 'Total Spent',
+                            amount: 'USD $spent',
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
                           'My Budgets',
                           style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         IconButton(
                             onPressed: () {
@@ -295,89 +353,107 @@ class _HomePageState extends State<HomePage> {
                                     );
                                   });
                             },
-                            icon: const Icon(Icons.add_circle))
+                            icon: const Icon(Icons.add_circle, size: 30))
                       ],
                     ),
-                  ),
-                  budgets != null
-                      ? ListView.builder(
-                          itemCount: budgets!.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return Dismissible(
-                              key: Key(budgets![index]['id'].toString()),
-                              direction: DismissDirection.endToStart,
-                              onDismissed: (direction) async {
-                                await deleteBudget(
-                                    budgets![index]['id'].toString());
-                              },
-                              background: Container(
-                                color: Colors.red,
-                                alignment: Alignment.centerRight,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: const Icon(
-                                  Icons.delete,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => TransactionsPage(
-                                        budgetId:
-                                            budgets![index]['id'].toString(),
-                                        budgetLabel: budgets![index]['label'],
-                                      ),
-                                    ),
-                                  );
+                    const SizedBox(height: 10),
+                    budgets != null
+                        ? ListView.builder(
+                            itemCount: budgets!.length,
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return Dismissible(
+                                key: Key(budgets![index]['id'].toString()),
+                                direction: DismissDirection.endToStart,
+                                onDismissed: (direction) async {
+                                  await deleteBudget(
+                                      budgets![index]['id'].toString());
                                 },
-                                child: BudgetTile(budget: budgets![index]),
+                                background: Container(
+                                  color: Colors.red,
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => TransactionsPage(
+                                          budgetId:
+                                              budgets![index]['id'].toString(),
+                                          budgetLabel: budgets![index]['label'],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: BudgetTile(budget: budgets![index]),
+                                ),
+                              );
+                            })
+                        : SizedBox(
+                            width: size.width,
+                            height: 120,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.blueGrey,
                               ),
-                            );
-                          })
-                      : SizedBox(
-                          width: size.width,
-                          height: 120,
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.blueGrey,
                             ),
                           ),
-                        ),
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                      'Transactions',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Transactions',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                  groupedByMonth.isNotEmpty
-                      ? ListView(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          children: groupedByMonth.entries.map((entry) {
-                            return ExpansionTile(
-                              title: Text(entry.key),
-                              children: entry.value.map((transaction) {
-                                return ListTile(
-                                  title: Text(transaction['desc']),
-                                  subtitle: Text(DateFormat.yMMMd().format(
-                                      DateTime.parse(
-                                          transaction['created_at']))),
-                                  trailing: Text('\$${transaction['amount']}'),
-                                );
-                              }).toList(),
-                            );
-                          }).toList(),
-                        )
-                      : const Center(
-                          child: Text('No transactions available'),
-                        ),
-                ],
+                    groupedByMonth.isNotEmpty
+                        ? ListView(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            children: groupedByMonth.entries.map((entry) {
+                              return ExpansionTile(
+                                title: Text(entry.key),
+                                children: entry.value.map((transaction) {
+                                  return ListTile(
+                                    title: Text(transaction['desc']),
+                                    subtitle: Text(DateFormat.yMMMd().format(
+                                        DateTime.parse(
+                                            transaction['created_at']))),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text('\$${transaction['amount']}'),
+                                        IconButton(
+                                          icon: Icon(Icons.delete),
+                                          onPressed: () async {
+                                            await deleteTransaction(
+                                              transaction['id'].toString(),
+                                              transaction['budget_id']
+                                                  .toString(),
+                                              transaction['amount'],
+                                              transaction['kind'],
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            }).toList(),
+                          )
+                        : const Center(
+                            child: Text('No transactions available'),
+                          ),
+                  ],
+                ),
               ),
             ),
     );
@@ -475,7 +551,7 @@ class BudgetTile extends StatelessWidget {
   }
 }
 
-class AddTransactionDialog extends StatelessWidget {
+class AddTransactionDialog extends StatefulWidget {
   final Size size;
   final List? budgets;
   final String? budget_id;
@@ -498,120 +574,149 @@ class AddTransactionDialog extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _AddTransactionDialogState createState() => _AddTransactionDialogState();
+}
+
+class _AddTransactionDialogState extends State<AddTransactionDialog> {
+  final _formKey = GlobalKey<FormState>();
+  String? kind;
+  String? budget_id;
+
+  @override
+  void initState() {
+    super.initState();
+    kind = widget.kind;
+    budget_id = widget.budget_id;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Add Transactions'),
       content: SizedBox(
-        width: size.width * 0.85,
-        height: size.height * 0.8,
-        child: budgets != null
+        width: widget.size.width * 0.85,
+        height: widget.size.height * 0.8,
+        child: widget.budgets != null
             ? SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DropdownButton<String>(
-                      items: <String>['Add', 'Spend'].map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      hint: const Text('Select Kind'),
-                      value: kind,
-                      onChanged: (value) {
-                        // Update state
-                      },
-                    ),
-                    DropdownButton(
-                      items: budgets!.map((budget) {
-                        return DropdownMenuItem(
-                          value: budget['id'].toString(),
-                          child: Text(budget['label']),
-                        );
-                      }).toList(),
-                      value: budget_id,
-                      hint: const Text('Select Budget'),
-                      onChanged: (value) {
-                        // Update state
-                      },
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(10),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        items: <String>['Add', 'Spend'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        hint: const Text('Select Kind'),
+                        value: kind,
+                        onChanged: (value) {
+                          setState(() {
+                            kind = value;
+                          });
+                        },
+                        validator: (value) =>
+                            value == null ? 'Please select a kind' : null,
                       ),
-                      child: TextField(
-                        controller: amount,
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField(
+                        items: widget.budgets!.map((budget) {
+                          return DropdownMenuItem(
+                            value: budget['id'].toString(),
+                            child: Text(budget['label']),
+                          );
+                        }).toList(),
+                        value: budget_id,
+                        hint: const Text('Select Budget'),
+                        onChanged: (value) {
+                          setState(() {
+                            budget_id = value.toString();
+                          });
+                        },
+                        validator: (value) =>
+                            value == null ? 'Please select a budget' : null,
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: widget.amount,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           hintText: 'Amount',
-                          border: InputBorder.none,
+                          border: OutlineInputBorder(),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an amount';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null;
+                        },
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextField(
-                        controller: category,
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: widget.category,
                         decoration: const InputDecoration(
                           hintText: 'Category',
-                          border: InputBorder.none,
+                          border: OutlineInputBorder(),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a category';
+                          }
+                          return null;
+                        },
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      height: 60,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextField(
-                        controller: desc,
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: widget.desc,
                         decoration: const InputDecoration(
                           hintText: 'TX Description',
-                          border: InputBorder.none,
+                          border: OutlineInputBorder(),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a description';
+                          }
+                          return null;
+                        },
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        if (amount.text.isNotEmpty &&
-                            category.text.isNotEmpty &&
-                            kind != null &&
-                            budget_id != null) {
-                          await addTransaction(budget_id, kind, amount.text,
-                              category.text, desc.text);
-                          // Reset state
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Container(
-                        width: size.width * 0.8,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Confirm',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onPrimary,
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () async {
+                          if (_formKey.currentState!.validate()) {
+                            await widget.addTransaction(
+                              budget_id,
+                              kind,
+                              widget.amount.text,
+                              widget.category.text,
+                              widget.desc.text,
+                            );
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: Container(
+                          width: widget.size.width * 0.8,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Confirm',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               )
             : const Center(
