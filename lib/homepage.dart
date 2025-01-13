@@ -221,7 +221,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wally'),
+        title: const Text('budgets'),
       ),
       drawer: Drawer(
         child: ListView(
@@ -306,7 +306,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     const Center(
                       child: Text(
-                        'Track Your Expenses',
+                        'keep track',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 22),
                       ),
@@ -318,14 +318,14 @@ class _HomePageState extends State<HomePage> {
                         Flexible(
                           child: InfoCard(
                             title: 'Wallet',
-                            amount: 'USD $wallet',
+                            amount: 'UGX $wallet',
                             color: Colors.blue,
                           ),
                         ),
                         Flexible(
                           child: InfoCard(
                             title: 'Total Spent',
-                            amount: 'USD $spent',
+                            amount: 'UGX $spent',
                             color: Colors.red,
                           ),
                         ),
@@ -416,7 +416,7 @@ class _HomePageState extends State<HomePage> {
                     groupedByMonth.isNotEmpty
                         ? ListView(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             children: groupedByMonth.entries.map((entry) {
                               return ExpansionTile(
                                 title: Text(entry.key),
@@ -431,7 +431,7 @@ class _HomePageState extends State<HomePage> {
                                       children: [
                                         Text('\$${transaction['amount']}'),
                                         IconButton(
-                                          icon: Icon(Icons.delete),
+                                          icon: const Icon(Icons.delete),
                                           onPressed: () async {
                                             await deleteTransaction(
                                               transaction['id'].toString(),
@@ -466,11 +466,11 @@ class InfoCard extends StatelessWidget {
   final Color color;
 
   const InfoCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.amount,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -503,9 +503,9 @@ class BudgetTile extends StatelessWidget {
   final Map<String, dynamic> budget;
 
   const BudgetTile({
-    Key? key,
+    super.key,
     required this.budget,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -543,7 +543,7 @@ class BudgetTile extends StatelessWidget {
           ],
         ),
         trailing: Text(
-          '${budget['amount']} USD',
+          '${budget['amount']} UGX',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
@@ -562,7 +562,7 @@ class AddTransactionDialog extends StatefulWidget {
   final Function addTransaction;
 
   const AddTransactionDialog({
-    Key? key,
+    super.key,
     required this.size,
     required this.budgets,
     required this.budget_id,
@@ -571,7 +571,7 @@ class AddTransactionDialog extends StatefulWidget {
     required this.category,
     required this.desc,
     required this.addTransaction,
-  }) : super(key: key);
+  });
 
   @override
   _AddTransactionDialogState createState() => _AddTransactionDialogState();
@@ -734,12 +734,12 @@ class AddBudgetDialog extends StatelessWidget {
   final Function addBudget;
 
   const AddBudgetDialog({
-    Key? key,
+    super.key,
     required this.size,
     required this.budgetName,
     required this.budgetAmount,
     required this.addBudget,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
